@@ -1,18 +1,12 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
-using HalcyonCore.SharedEntities;
-using System.Collections.Generic;
-using System.Linq;
-using HalcyonCore.Utilities;
-using Azure.Data.Tables;
 using Azure;
+using Azure.Data.Tables;
+using HalcyonCore.SharedEntities;
+using HalcyonCore.Utilities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Microsoft.Azure.Functions.Worker;
 
 namespace HalcyonTransactions
 {
@@ -25,7 +19,7 @@ namespace HalcyonTransactions
             _configuration = configuration;
         }
 
-        [FunctionName("GetDashBoardData")]
+        [Function("GetDashBoardData")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req)
         {

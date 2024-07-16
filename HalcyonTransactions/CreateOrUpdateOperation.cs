@@ -1,21 +1,11 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging.Abstractions;
-using Newtonsoft.Json;
-using HalcyonCore.SharedEntities;
-using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
-using Azure.Data.Tables;
 using Azure;
-using System.Linq;
-using Microsoft.Extensions.Logging;
-using System.Net.Mail;
-using System.Text;
+using Azure.Data.Tables;
+using HalcyonCore.SharedEntities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Azure.Functions.Worker;
+using Newtonsoft.Json;
 
 namespace HalcyonTransactions
 {
@@ -28,7 +18,7 @@ namespace HalcyonTransactions
             _configuration = configuration;
         }
 
-        [FunctionName("CreateOrUpdateOperation")]
+        [Function("CreateOrUpdateOperation")]
         public async Task<IActionResult> Run(
            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req)
         {
