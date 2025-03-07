@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using System.Globalization;
 
 namespace HalcyonTransactions
 {
@@ -51,6 +52,8 @@ namespace HalcyonTransactions
                     workTask.StartDate = worktask.StartDate;
                     workTask.State = worktask.State;
                     workTask.TargetDate = worktask.TargetDate;
+                    workTask.DisplayStartDate = Convert.ToDateTime(worktask.StartDate).ToString("MM/dd/yyyy", CultureInfo.InvariantCulture);
+                    workTask.DisplayTargetDate = Convert.ToDateTime(worktask.TargetDate).ToString("MM/dd/yyyy", CultureInfo.InvariantCulture);
                     workTask.Title = worktask.Title;
                     workTask.Completed = worktask.Completed;
                     workTask.DeviceName = worktask.DeviceName;
