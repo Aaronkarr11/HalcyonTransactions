@@ -40,7 +40,7 @@ namespace HalcyonTransactions
                 model.DeviceName = RequestObject.DeviceName;
                 model.StartingDate = RequestObject.StartingDate;
 
-                return new OkObjectResult(JsonConvert.SerializeObject(RequestObject));
+                return new OkObjectResult(JsonConvert.SerializeObject(model));
             }
             catch (Exception ex)
             {
