@@ -37,7 +37,7 @@ namespace HalcyonTransactions
                 requestTableEntity.RowKey = RequestObject.RowKey;
                 requestTableEntity.PartitionKey = RequestObject.PartitionKey;
                 requestTableEntity.DeviceName = RequestObject.DeviceName;
-                requestTableEntity.StartingDate = RequestObject.StartingDate;
+                requestTableEntity.StartingDate = DateTime.SpecifyKind(Convert.ToDateTime(RequestObject.StartingDate), DateTimeKind.Utc);
                 requestTableEntity.Timestamp = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc);
 
                 var result = client.UpsertEntity(requestTableEntity);
