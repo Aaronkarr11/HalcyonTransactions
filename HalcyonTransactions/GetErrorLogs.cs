@@ -6,20 +6,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Microsoft.Azure.Functions.Worker;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HalcyonTransactions
 {
-    public class GetWMSchedule
+    public class GetErrorLogs
     {
         private readonly IConfiguration _configuration;
 
-        public GetWMSchedule(IConfiguration configuration)
+        public GetErrorLogs(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
-        [Function("GetWMSchedule")]
+        [Function("GetErrorLogs")]
         public async Task<IActionResult> Run(
            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req)
         {
@@ -27,20 +26,29 @@ namespace HalcyonTransactions
             {
                 var conString = _configuration["AzureWebJobsStorage"];
                 string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-                WMScheduleModel RequestObject = JsonConvert.DeserializeObject<WMScheduleModel>(requestBody);
+                ErrorLogModel RequestObject = JsonConvert.DeserializeObject<ErrorLogModel>(requestBody);
 
-                TableClient client = new TableClient(conString, $"{RequestObject.DeviceName}WMSchedule");
+                TableClient client = new TableClient(conString, $"{RequestObject.DeviceName}ErrorLogs");
                 await client.CreateIfNotExistsAsync();
-                Pageable<WMScheduleTableEntity> entities = client.Query<WMScheduleTableEntity>();
+                Pageable<ErrorLogTableEntity> entities = client.Query<ErrorLogTableEntity>();
 
-                WMScheduleModel model = new WMScheduleModel();
+                List<ErrorLogModel> ErrorLogList = new List<ErrorLogModel>();
 
-                model.RowKey = RequestObject.RowKey;
-                model.PartitionKey = RequestObject.PartitionKey;
-                model.DeviceName = RequestObject.DeviceName;
-                model.StartingDate = RequestObject.StartingDate;
+                //ToDO Have ammount be a parameter
+                foreach (var error in entities.ToList().Take(100))
+                {
+                    ErrorLogModel errorRecord = new ErrorLogModel();
 
-                return new OkObjectResult(JsonConvert.SerializeObject(RequestObject));
+                    errorRecord.RowKey = error.RowKey;
+                    errorRecord.PartitionKey = error.PartitionKey;
+                    errorRecord.Message = error.Message;
+                    errorRecord.ClassName = error.ClassName;
+                    errorRecord.MethodName = error.MethodName;
+                    errorRecord.ErrorDate = error.ErrorDate;
+
+                    ErrorLogList.Add(errorRecord);
+                }
+                return new OkObjectResult(JsonConvert.SerializeObject(ErrorLogList));
             }
             catch (Exception ex)
             {

@@ -6,19 +6,20 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Microsoft.Azure.Functions.Worker;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HalcyonTransactions
 {
-    public class GetErrorLogs
+    public class GetWMSchedule
     {
         private readonly IConfiguration _configuration;
 
-        public GetErrorLogs(IConfiguration configuration)
+        public GetWMSchedule(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
-        [Function("GetErrorLogs")]
+        [Function("GetWMSchedule")]
         public async Task<IActionResult> Run(
            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req)
         {
@@ -26,29 +27,20 @@ namespace HalcyonTransactions
             {
                 var conString = _configuration["AzureWebJobsStorage"];
                 string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-                ErrorLogModel RequestObject = JsonConvert.DeserializeObject<ErrorLogModel>(requestBody);
+                WMScheduleModel RequestObject = JsonConvert.DeserializeObject<WMScheduleModel>(requestBody);
 
-                TableClient client = new TableClient(conString, $"{RequestObject.DeviceName}ErrorLogs");
+                TableClient client = new TableClient(conString, $"{RequestObject.DeviceName}WMSchedule");
                 await client.CreateIfNotExistsAsync();
-                Pageable<ErrorLogTableEntity> entities = client.Query<ErrorLogTableEntity>();
+                Pageable<WMScheduleTableEntity> entities = client.Query<WMScheduleTableEntity>();
 
-                List<ErrorLogModel> ErrorLogList = new List<ErrorLogModel>();
+                WMScheduleModel model = new WMScheduleModel();
 
-                //ToDO Have ammount be a parameter
-                foreach (var error in entities.ToList().Take(100))
-                {
-                    ErrorLogModel errorRecord = new ErrorLogModel();
+                model.RowKey = RequestObject.RowKey;
+                model.PartitionKey = RequestObject.PartitionKey;
+                model.DeviceName = RequestObject.DeviceName;
+                model.StartingDate = RequestObject.StartingDate;
 
-                    errorRecord.RowKey = error.RowKey;
-                    errorRecord.PartitionKey = error.PartitionKey;
-                    errorRecord.Message = error.Message;
-                    errorRecord.ClassName = error.ClassName;
-                    errorRecord.MethodName = error.MethodName;
-                    errorRecord.ErrorDate = error.ErrorDate;
-
-                    ErrorLogList.Add(errorRecord);
-                }
-                return new OkObjectResult(JsonConvert.SerializeObject(ErrorLogList));
+                return new OkObjectResult(JsonConvert.SerializeObject(RequestObject));
             }
             catch (Exception ex)
             {
