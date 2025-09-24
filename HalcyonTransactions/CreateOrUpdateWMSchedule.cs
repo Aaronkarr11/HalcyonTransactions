@@ -3,23 +3,22 @@ using Azure.Data.Tables;
 using HalcyonCore.SharedEntities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using Microsoft.Azure.Functions.Worker;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HalcyonTransactions
 {
-    public class GetWMSchedule
+    public class CreateOrUpdateWMSchedule
     {
         private readonly IConfiguration _configuration;
 
-        public GetWMSchedule(IConfiguration configuration)
+        public CreateOrUpdateWMSchedule(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
-        [Function("GetWMSchedule")]
+        [Function("CreateOrUpdateWMSchedule")]
         public async Task<IActionResult> Run(
            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req)
         {
@@ -33,20 +32,21 @@ namespace HalcyonTransactions
                 await client.CreateIfNotExistsAsync();
                 Pageable<WMScheduleTableEntity> entities = client.Query<WMScheduleTableEntity>();
 
-                WMScheduleModel model = new WMScheduleModel();
+                WMScheduleTableEntity requestTableEntity = new WMScheduleTableEntity();
 
-                model.RowKey = RequestObject.RowKey;
-                model.PartitionKey = RequestObject.PartitionKey;
-                model.DeviceName = RequestObject.DeviceName;
-                model.StartingDate = RequestObject.StartingDate;
+                requestTableEntity.RowKey = RequestObject.RowKey;
+                requestTableEntity.PartitionKey = RequestObject.PartitionKey;
+                requestTableEntity.DeviceName = RequestObject.DeviceName;
+                requestTableEntity.StartingDate = RequestObject.StartingDate;
+                requestTableEntity.Timestamp = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc);
 
-                return new OkObjectResult(JsonConvert.SerializeObject(RequestObject));
+                var result = client.UpsertEntity(requestTableEntity);
+                return new OkObjectResult(JsonConvert.SerializeObject(result.Status));
             }
             catch (Exception ex)
             {
                 return new BadRequestObjectResult(ex.Message);
             }
-
         }
     }
 }
